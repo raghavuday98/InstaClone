@@ -22,7 +22,9 @@ router.get("/feed", isLoggedIn, async function (req, res) {
 });
 
 router.get("/profile", isLoggedIn, async function (req, res) {
-  const user = await userModel.findOne({ username: req.session.passport.user }).populate("posts");
+  const user = await userModel
+    .findOne({ username: req.session.passport.user })
+    .populate("posts");
   res.render("profile", { footer: true, user });
 });
 
@@ -31,7 +33,7 @@ router.get("/search", isLoggedIn, function (req, res) {
 });
 
 router.get("/edit", isLoggedIn, function (req, res) {
-  res.render("edit", { footer: true });
+  res.render("edit", { footer: true, user: req.user });
 });
 
 router.get("/upload", isLoggedIn, async function (req, res) {
@@ -40,8 +42,8 @@ router.get("/upload", isLoggedIn, async function (req, res) {
 });
 
 router.get("/username/:username", isLoggedIn, async function (req, res) {
-  const regex = new RegExp(`^${req.params.username}`, 'i');
-  const users = await userModel.find({username: regex});
+  const regex = new RegExp(`^${req.params.username}`, "i");
+  const users = await userModel.find({ username: regex });
   res.json(users);
 });
 
@@ -70,26 +72,31 @@ router.post(
   }
 );
 
-router.get("/logout", function (req, res, next) {
-  req.logout(function (err) {
-    if (err) return next(err);
-    res.redirect("/");
-  });
-});
+router.post('/update', isLoggedIn, upload.single('image'), async (req, res, next) => {
+  try {
+    if (!req.user) return res.status(401).send('Unauthorized');
 
-router.post("/update", upload.single("image"), async function (req, res) {
-  const user = await userModel.findOneAndUpdate(
-    { username: req.session.passport.user },
-    { username: req.body.username, name: req.body.name, bio: req.body.bio },
-    { new: true }
-  );
+    // Find user by id from passport session
+    const user = await userModel.findById(req.user._id);
 
-  if (req.file) {
-    user.profileImage = req.file.filename;
+    if (!user) return res.status(404).send('User not found');
+
+   if (req.file) {
+      user.picture = req.file.filename; // multer saves filename here
+    }
+
+    user.username = req.body.username || user.username;
+    user.name = req.body.name || user.name;
+    user.bio = req.body.bio || user.bio;
+
+    await user.save();
+
+    res.redirect('/profile');
+  } catch (error) {
+    next(error);
   }
-  await user.save();
-  res.redirect("/profile");
 });
+
 
 router.post(
   "/upload",
