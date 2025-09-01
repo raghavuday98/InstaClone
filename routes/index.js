@@ -82,7 +82,7 @@ router.post('/update', isLoggedIn, upload.single('image'), async (req, res, next
     if (!user) return res.status(404).send('User not found');
 
    if (req.file) {
-      user.picture = req.file.filename; // multer saves filename here
+      user.picture = req.file.filename;
     }
 
     user.username = req.body.username || user.username;
