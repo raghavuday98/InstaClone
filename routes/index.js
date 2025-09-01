@@ -16,9 +16,19 @@ router.get("/login", function (req, res) {
   res.render("login", { footer: false });
 });
 
+function dater(date) {
+  // For example, format date as 'dd/mm/yyyy hh:mm'
+  return date.toLocaleString('en-GB', { hour12: false });
+}
+
 router.get("/feed", isLoggedIn, async function (req, res) {
-  const post = await postModel.find().populate("user");
-  res.render("feed", { footer: true, posts });
+  const posts = await postModel.find().populate("user");
+  const user = req.user;
+  const stories = [];
+  function dater(date) {
+    return date.toLocaleString('en-GB', { hour12: false });
+  }
+  res.render("feed", { footer: true, posts, user, stories, dater });
 });
 
 router.get("/profile", isLoggedIn, async function (req, res) {
@@ -29,7 +39,7 @@ router.get("/profile", isLoggedIn, async function (req, res) {
 });
 
 router.get("/search", isLoggedIn, function (req, res) {
-  res.render("search", { footer: true });
+  res.render("search", { footer: true, user: req.user });
 });
 
 router.get("/edit", isLoggedIn, function (req, res) {
@@ -38,7 +48,7 @@ router.get("/edit", isLoggedIn, function (req, res) {
 
 router.get("/upload", isLoggedIn, async function (req, res) {
   const user = await userModel.findOne({ username: req.session.passport.user });
-  res.render("upload", { footer: true });
+  res.render("upload", { footer: true, user: req.user });
 });
 
 router.get("/username/:username", isLoggedIn, async function (req, res) {
@@ -74,29 +84,26 @@ router.post(
 
 router.post('/update', isLoggedIn, upload.single('image'), async (req, res, next) => {
   try {
-    if (!req.user) return res.status(401).send('Unauthorized');
-
-    // Find user by id from passport session
     const user = await userModel.findById(req.user._id);
-
     if (!user) return res.status(404).send('User not found');
 
-   if (req.file) {
-      user.picture = req.file.filename;
+    // Update picture if file uploaded
+    if (req.file) {
+      user.profileImage = req.file.filename;
     }
 
+    // Update other info
     user.username = req.body.username || user.username;
     user.name = req.body.name || user.name;
     user.bio = req.body.bio || user.bio;
 
     await user.save();
-
     res.redirect('/profile');
   } catch (error) {
-    next(error);
+    console.error(error);
+    res.status(500).send('Internal server error updating profile');
   }
 });
-
 
 router.post(
   "/upload",
