@@ -16,7 +16,7 @@
           <div class="inner w-[92%] h-[92%] rounded-full overflow-hidden">
             <img
               class="w-full h-full object-cover"
-              src="/images/uploads/<%= user.picture %>"
+              src="/images/uploads/<%= user.profileImage %>"
               alt=""
             />
           </div>
@@ -32,7 +32,7 @@
           <div class="inner w-[92%] h-[92%] rounded-full overflow-hidden">
             <img
               class="w-full h-full object-cover"
-              src="/images/uploads/<%= story.user.picture %>"
+              src="/images/uploads/<%= user.profileImage %>"
               alt=""
             />
           </div>
@@ -48,7 +48,7 @@
         <div class="w-[9vw] h-[9vw] bg-sky-100 rounded-full overflow-hidden">
           <img
             class="w-full h-full object-cover"
-            src="/images/uploads/<%= post.user.picture %>"
+            src="/images/uploads/<%= post.user.profileImage ? post.user.profileImage : 'default-profile.png' %>"
             alt=""
           />
         </div>
